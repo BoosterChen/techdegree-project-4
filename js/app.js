@@ -1,7 +1,7 @@
 !function(){
     let currentPlayer = "",
         winPatterns = [],
-        userName = "Guangyu",
+        userName = "",
         gameStatus = "";
     const boxes = document.querySelector(".boxes");
           boxList = document.querySelectorAll(".boxes li"),
@@ -36,6 +36,12 @@
         // display new game div
         newGameDiv.hidden = false;
 
+        // get user name
+        const name=prompt("Please enter your name");
+        if(name.trim() !== ""){
+            userName = name;
+        }
+
         // add start button listener
         startButton.addEventListener("click", startNewGame);
 
@@ -47,7 +53,9 @@
             ele.addEventListener("mouseenter", e => {
                 // empty square
                 if(e.target.className === "box"){
-                    e.target.style.backgroundImage = `url("img/${currentPlayer === "player1" ? "o":"x"}.svg")`;
+                    // the user will always be player1 when play with computer so i fix this background image to o.svg
+                    // e.target.style.backgroundImage = `url("img/${currentPlayer === "player1" ? "o":"x"}.svg")`;
+                    e.target.style.backgroundImage = `url("img/o.svg")`;
                 }
             });
             ele.addEventListener("mouseleave", e => {
@@ -60,7 +68,8 @@
 
         // init board listener
         boxes.addEventListener("click", e => {
-            if(e.target.className === "box"){
+            e.target.style.backgroundImage = "";
+            if(e.target.className === "box" && currentPlayer === "player1"){
                 newMove(e.target);
             }
         })
@@ -69,7 +78,7 @@
     function newMove( box ){
         box.className += currentPlayer === "player1" ? " box-filled-1" : " box-filled-2";
 
-        checkWin();
+        gameStatus = checkWin();
         if(gameStatus !== "play"){
             gameFinish();
         } else {
@@ -81,7 +90,7 @@
             if(currentPlayer === "player2"){
                 setTimeout(() => {
                     computerMove();
-                }, 1000);
+                }, 500);
             }
         }
     }
@@ -98,9 +107,10 @@
         currentPlayer = "player1";
         gameStatus = "play";
         document.querySelector("#player1").className = "players active";
+        document.querySelector("#finish").className = "screen screen-win";
         boxList.forEach(ele => {
             ele.className = "box";
-            ele.style.backgroundImage = ""
+            ele.style.backgroundImage = "";
         });
     }
 
@@ -112,7 +122,6 @@
         } else if(gameStatus === "win"){
             document.querySelector("#finish").className += ` screen-win-${currentPlayer === "player1" ? "one":"two"}`;
             document.querySelector(".message").textContent = `Winner: ${currentPlayer === "player1" ? (userName === "" ? "player1" : userName ):"Computer"}`
-
         }
 
         board.hidden = true;
@@ -122,18 +131,99 @@
 
     // check if anyplayer is win
     function checkWin(){
-        // todo
+        // check if all squares are taken
+        let full = true;
+        for(let i = 0; i < boxList.length; i++) {
+            if (boxList[i].className === "box") {
+                full = false;
+                break;
+            }
+        }
+
+        // check if any winPattern is matched
+        let win = winPatterns.some(pattern => {
+            if(pattern[0].className === pattern[1].className && pattern[1].className === pattern[2].className && pattern[0].className != "box"){
+                return true;
+            }
+        });
+
+        // if all squares are taken then is a tie, otherwise player will continue play
+        if(win){
+            return "win";
+        }else if(full){
+            return "tie";
+        } else {
+            return "play";
+        }
     }
 
-    // computer move
+    // computer move, pretty dull ai
     function computerMove(){
-        // todo
+        // try to win
+        // if there are 2 squares in a row
+        for(let i = 0; i < winPatterns.length; i++) {
+            const pattern = winPatterns[i];
+            if(pattern[0].className.indexOf("box-filled-2") > 0 && pattern[1].className.indexOf("box-filled-2") > 0 && pattern[2].className === "box"){
+                newMove(pattern[2]);
+                return;
+            } else if (pattern[1].className.indexOf("box-filled-2") > 0 && pattern[2].className.indexOf("box-filled-2") > 0 && pattern[0].className === "box"){
+                newMove(pattern[0]);
+                return;
+            } else if(pattern[0].className.indexOf("box-filled-2") > 0 && pattern[2].className.indexOf("box-filled-2") > 0 && pattern[1].className === "box"){
+                newMove(pattern[1]);
+                return;
+            }
+        }
 
         // prevent player from winning
+        for(let i = 0; i < winPatterns.length; i++) {
+            const pattern = winPatterns[i];
+            if(pattern[0].className.indexOf("box-filled-1") > 0 && pattern[1].className.indexOf("box-filled-1") > 0 && pattern[2].className === "box"){
+                newMove(pattern[2]);
+                return;
+            } else if (pattern[1].className.indexOf("box-filled-1") > 0 && pattern[2].className.indexOf("box-filled-1") > 0 && pattern[0].className === "box"){
+                newMove(pattern[0]);
+                return;
+            } else if(pattern[0].className.indexOf("box-filled-1") > 0 && pattern[2].className.indexOf("box-filled-1") > 0 && pattern[1].className === "box"){
+                newMove(pattern[1]);
+                return;
+            }
+        }
 
-        // try to win
-        // winning point
-        // pick a pattern
+
+        // if there are 1 square in a row
+        for(let i = 0; i < winPatterns.length; i++) {
+            const pattern = winPatterns[i];
+            if(pattern[0].className.indexOf("box-filled-2") > 0 && pattern[1].className === "box" && pattern[2].className === "box"){
+                newMove(pattern[1]);
+                return;
+            } else if (pattern[1].className.indexOf("box-filled-2") > 0 && pattern[0].className === "box" && pattern[2].className === "box"){
+                newMove(pattern[0]);
+                return;
+            } else if(pattern[2].className.indexOf("box-filled-2") > 0 && pattern[0].className === "box" && pattern[1].className === "box"){
+                newMove(pattern[1]);
+                return;
+            }
+        }
+
+
+        // find a blank pattern
+        for(let i = 0; i < winPatterns.length; i++) {
+            const pattern = winPatterns[i];
+            if(pattern[0].className === "box" && pattern[1].className === "box" && pattern[2].className === "box"){
+                newMove(pattern[0]);
+                return;
+            }
+        }
+
+
+        // find next blank
+        for(let i = 0; i < boxList.length; i++) {
+            if (boxList[i].className === "box") {
+                newMove(boxList[i]);
+                return;
+            }
+        }
     }
 
     // export function
