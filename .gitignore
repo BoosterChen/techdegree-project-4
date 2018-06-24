@@ -53,3 +53,9 @@ fabric.properties
 # Editor-based Rest Client
 .idea/httpRequests
 
+.idea/inspectionProfiles/
+.idea/misc.xml
+.idea/modules.xml
+.idea/techdegree-project-4.iml
+.idea/vcs.xml
+css/.DS_Store
